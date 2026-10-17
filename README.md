@@ -22,7 +22,6 @@ connectED is an AI-powered professional networking platform connecting students,
 │   ├── requirements.txt             # Python dependencies
 │   ├── .env.example                 # Environment template
 │   └── README.md                    # Backend documentation & API contract
-├── FRONTEND_INTEGRATION_GUIDE.md    # Root integration guide for frontend team
 └── README.md                        # Project root documentation
 ```
 
@@ -57,6 +56,6 @@ pytest -v
 
 ## Frontend Integration
 
-For complete details on connecting the React / Vite frontend to the backend endpoints, authentication headers, WebSockets/Telegram notifications, and error payloads, refer to:
-- [FRONTEND_INTEGRATION_GUIDE.md](FRONTEND_INTEGRATION_GUIDE.md)
-- [backend/openapi.json](backend/openapi.json)
+For API contracts, models, authentication headers, and error response schemas, refer to:
+- **Interactive Swagger Docs:** `http://localhost:8000/docs`
+- **OpenAPI 3.1.0 JSON Schema:** [`backend/openapi.json`](backend/openapi.json)
