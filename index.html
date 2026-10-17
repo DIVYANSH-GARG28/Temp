@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>connectED // Connectome MVP</title>
+    <!-- Vis.js CDN -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fafafa; /* Clean high-end white/off-white MVP background */
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+        }
+
+        #mynetwork {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Minimalist Vercel/Linear-style Header HUD */
+        #hud {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 16px 22px;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            pointer-events: none;
+        }
+
+        h1 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+            text-transform: uppercase;
+        }
+
+        .status {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 400;
+        }
+
+        .status-dot {
+            height: 6px;
+            width: 6px;
+            background-color: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        /* Top-Right E-Card Panel (Strictly Top 3 Connections) */
+        #ecard-panel {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            width: 300px;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 18px;
+            display: none;
+            animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ecard-header {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            margin-bottom: 12px;
+            font-weight: 600;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 6px;
+        }
+
+        .ecard-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .ecard-item:hover {
+            border-color: #cbd5e1;
+            background: #f1f5f9;
+        }
+
+        .ecard-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .ecard-detail {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Bottom Centered Command Search Input */
+        #search-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: auto;
+        }
+
+        #search-input {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-family: inherit;
+            font-size: 13px;
+            width: 280px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        #search-input:focus {
+            outline: none;
+            border-color: #0f172a;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+            width: 320px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Minimalist HUD -->
+    <div id="hud">
+        <h1>ConnectED // MVP</h1>
+        <div class="status"><span class="status-dot"></span> Click a node to view top 3 links</div>
+    </div>
+
+    <!-- Dynamic E-Cards Panel -->
+    <div id="ecard-panel">
+        <div class="ecard-header" id="ecard-title">Top Connections</div>
+        <div id="ecard-content"></div>
+    </div>
+
+    <!-- Network Container -->
+    <div id="mynetwork"></div>
+
+    <!-- Command Search Bar -->
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search node (e.g. Python, Riya)">
+    </div>
+
+    <script>
+        const rawNodes = [
+            { id: "student_1", label: "Aarav (Student)", group: "Student", role: "CS Undergraduate", company: "Looking for Internship" },
+            { id: "student_2", label: "Priya (Student)", group: "Student", role: "IT Undergraduate", company: "Looking for Mentorship" },
+            { id: "alumni_1", label: "Riya (Alumni)", group: "Alumni", role: "Software Engineer", company: "Google (3 yrs exp)" },
+            { id: "alumni_2", label: "Kabir (Alumni)", group: "Alumni", role: "Data Scientist", company: "Microsoft (4 yrs exp)" },
+            { id: "skill_1", label: "Python", group: "Skill", role: "Core Language", company: "High Demand" },
+            { id: "skill_2", label: "Machine Learning", group: "Skill", role: "AI / Modeling", company: "Advanced Track" },
+            { id: "company_1", label: "Google", group: "Company", role: "Tech Enterprise", company: "Mountain View, CA" },
+            { id: "company_2", label: "Microsoft", group: "Company", role: "Tech Enterprise", company: "Redmond, WA" }
+        ];
+
+        const rawEdges = [
+            { from: "student_1", to: "skill_1", label: "wants_to_learn" },
+            { from: "student_2", to: "skill_2", label: "wants_to_learn" },
+            { from: "alumni_1", to: "skill_1", label: "has_skill" },
+            { from: "alumni_2", to: "skill_2", label: "has_skill" },
+            { from: "alumni_1", to: "company_1", label: "works_at" },
+            { from: "alumni_2", to: "company_2", label: "works_at" },
+            { from: "alumni_1", to: "student_1", label: "mentors" }
+        ];
+
+        const nodes = new vis.DataSet(rawNodes);
+        const edges = new vis.DataSet(rawEdges);
+
+        const container = document.getElementById('mynetwork');
+        const data = { nodes: nodes, edges: edges };
+        
+        // Product-grade Light Mode Options
+        const options = {
+            nodes: {
+                shape: 'box',
+                margin: 10,
+                font: {
+                    color: '#0f172a',
+                    face: '-apple-system, sans-serif',
+                    size: 12,
+                    bold: { size: 12 }
+                },
+                borderWidth: 1.5,
+                borderRadius: 6,
+                shadow: {
+                    enabled: true,
+                    color: 'rgba(0, 0, 0, 0.06)',
+                    size: 8, x: 0, y: 2
+                }
+            },
+            edges: {
+                color: {
+                    color: '#cbd5e1',
+                    highlight: '#0f172a',
+                    hover: '#0f172a'
+                },
+                width: 1.5,
+                font: {
+                    color: '#64748b',
+                    size: 9,
+                    face: 'monospace',
+                    align: 'middle'
+                },
+                arrows: {
+                    to: { enabled: true, scaleFactor: 0.5 }
+                },
+                smooth: { type: 'continuous' }
+            },
+            groups: {
+                Student: {
+                    color: { background: '#f0f9ff', border: '#0284c7', highlight: { background: '#e0f2fe', border: '#0369a1' } }
+                },
+                Alumni: {
+                    color: { background: '#fff7ed', border: '#ea580c', highlight: { background: '#ffedd5', border: '#c2410c' } }
+                },
+                Skill: {
+                    color: { background: '#f0fdf4', border: '#16a34a', highlight: { background: '#dcfce7', border: '#15803d' } }
+                },
+                Company: {
+                    color: { background: '#fef2f2', border: '#dc2626', highlight: { background: '#fee2e2', border: '#b91c1c' } }
+                }
+            },
+            physics: {
+                barnesHut: {
+                    gravitationalConstant: -3500,
+                    centralGravity: 0.3,
+                    springLength: 140,
+                    springStrength: 0.05
+                }
+            },
+            interaction: {
+                hover: true,
+                zoomView: true,
+                dragNodes: true
+            }
+        };
+
+        const network = new vis.Network(container, data, options);
+
+        // Click Event: Top 3 E-Cards
+        network.on("click", function (params) {
+            const panel = document.getElementById('ecard-panel');
+            const titleEl = document.getElementById('ecard-title');
+            const contentEl = document.getElementById('ecard-content');
+
+            if (params.nodes.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+
+            const clickedNodeId = params.nodes[0];
+            const clickedNode = rawNodes.find(n => n.id === clickedNodeId);
+
+            const connectedNodeIds = [];
+            rawEdges.forEach(edge => {
+                if (edge.from === clickedNodeId) connectedNodeIds.push(edge.to);
+                if (edge.to === clickedNodeId) connectedNodeIds.push(edge.from);
+            });
+
+            const uniqueMatches = [...new Set(connectedNodeIds)]
+                .map(id => rawNodes.find(n => n.id === id))
+                .filter(Boolean);
+
+            // Strict Top 3 limit
+            const top3Matches = uniqueMatches.slice(0, 3);
+
+            titleEl.innerText = `Top Links // ${clickedNode.label.split(' ')[0]}`;
+            
+            if (top3Matches.length === 0) {
+                contentEl.innerHTML = `<div class="ecard-item"><div class="ecard-name">No links</div><div class="ecard-detail">Isolated node</div></div>`;
+            } else {
+                contentEl.innerHTML = top3Matches.map(match => `
+                    <div class="ecard-item">
+                        <div class="ecard-name">${match.label}</div>
+                        <div class="ecard-detail">${match.role} &bull; ${match.company}</div>
+                    </div>
+                `).join('');
+            }
+
+            panel.style.display = 'block';
+        });
+
+        // Search Command Bar
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if (!term) return;
+            const found = rawNodes.find(n => n.label.toLowerCase().includes(term) || n.id.toLowerCase().includes(term));
+            if (found) {
+                network.focus(found.id, { scale: 1.4, animation: { duration: 350 } });
+                network.selectNodes([found.id]);
+            }
+        });
+    </script>
+</body>
+</html>

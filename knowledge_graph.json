@@ -1,0 +1,101 @@
+{
+    "directed": true,
+    "multigraph": false,
+    "graph": {},
+    "nodes": [
+        {
+            "id": "student_1",
+            "type": "Student",
+            "name": "Aarav",
+            "career_goal": "Machine Learning Engineer"
+        },
+        {
+            "id": "alumni_1",
+            "type": "Alumni",
+            "name": "Riya",
+            "company": "Google",
+            "role": "Software Engineer",
+            "experience_years": 3
+        },
+        {
+            "id": "alumni_2",
+            "type": "Alumni",
+            "name": "Kabir",
+            "company": "Microsoft",
+            "role": "Data Scientist",
+            "experience_years": 4
+        },
+        {
+            "id": "skill_1",
+            "type": "Skill",
+            "name": "Python"
+        },
+        {
+            "id": "skill_2",
+            "type": "Skill",
+            "name": "Machine Learning"
+        },
+        {
+            "id": "skill_3",
+            "type": "Skill",
+            "name": "SQL"
+        },
+        {
+            "id": "company_1",
+            "type": "Company",
+            "name": "Google"
+        },
+        {
+            "id": "company_2",
+            "type": "Company",
+            "name": "Microsoft"
+        }
+    ],
+    "edges": [
+        {
+            "relationship": "HAS_SKILL",
+            "source": "student_1",
+            "target": "skill_1"
+        },
+        {
+            "relationship": "WANTS_TO_LEARN",
+            "source": "student_1",
+            "target": "skill_2"
+        },
+        {
+            "relationship": "HAS_SKILL",
+            "source": "alumni_1",
+            "target": "skill_1"
+        },
+        {
+            "relationship": "HAS_SKILL",
+            "source": "alumni_1",
+            "target": "skill_2"
+        },
+        {
+            "relationship": "WORKS_AT",
+            "source": "alumni_1",
+            "target": "company_1"
+        },
+        {
+            "relationship": "HAS_SKILL",
+            "source": "alumni_2",
+            "target": "skill_1"
+        },
+        {
+            "relationship": "HAS_SKILL",
+            "source": "alumni_2",
+            "target": "skill_2"
+        },
+        {
+            "relationship": "HAS_SKILL",
+            "source": "alumni_2",
+            "target": "skill_3"
+        },
+        {
+            "relationship": "WORKS_AT",
+            "source": "alumni_2",
+            "target": "company_2"
+        }
+    ]
+}
