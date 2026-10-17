@@ -1,0 +1,10 @@
+from app.repositories.base import doc_to_dict
+from app.repositories.user_repository import user_repo, UserRepository
+from app.repositories.profile_repository import profile_repo, ProfileRepository
+from app.repositories.mentorship_repository import mentorship_repo, MentorshipRepository
+from app.repositories.meeting_repository import meeting_repo, MeetingRepository
+from app.repositories.telegram_repository import telegram_repo, TelegramRepository
+from app.repositories.opportunity_repository import opportunity_repo, OpportunityRepository
+from app.repositories.research_repository import research_repo, ResearchRepository
+from app.repositories.community_repository import community_repo, CommunityRepository
+from app.repositories.outbox_repository import outbox_repo, OutboxRepository
