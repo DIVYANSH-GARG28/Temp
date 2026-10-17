@@ -11,8 +11,7 @@ This document provides everything the frontend team needs to build, connect, and
 | **API Base URL (Local)** | `http://localhost:8000` |
 | **API Prefix** | `/api/v1` |
 | **Interactive Swagger Docs** | `http://localhost:8000/docs` |
-| **OpenAPI Spec URL** | `http://localhost:8000/openapi.json` |
-| **Contract Spec Files** | `connected-openapi-v1-draft.yaml` and `openapi.json` |
+| **Contract Spec Files** | `backend/openapi.json` |
 | **Supported Frontend Ports (CORS)** | `http://localhost:5173` (Vite), `http://localhost:3000` (Next/React) |
 | **Authentication Type** | Bearer Token: `Authorization: Bearer <access_token>` |
 | **Total Endpoints** | 23 |

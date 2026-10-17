@@ -90,7 +90,7 @@ connectED is an AI-powered professional networking platform connecting students,
 │   ├── test_graph.py
 │   ├── test_opportunities.py
 │   └── test_faculty_research.py
-├── connected-openapi-v1-draft.yaml  # OpenAPI 3.1.0 complete YAML spec matching exact routes
+├── openapi.json                     # OpenAPI 3.1.0 JSON contract exported from FastAPI
 ├── requirements.txt
 ├── .env.example
 ├── .gitignore
@@ -215,8 +215,7 @@ All application errors return:
 5. View API Documentation:
    - **Swagger UI:** `http://127.0.0.1:8000/docs`
    - **ReDoc:** `http://127.0.0.1:8000/redoc`
-   - **OpenAPI JSON:** `http://127.0.0.1:8000/openapi.json`
-   - **Contract Specification:** `connected-openapi-v1-draft.yaml`
+   - **Contract Specification:** `openapi.json`
 
 ---
 

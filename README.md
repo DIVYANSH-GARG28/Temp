@@ -18,9 +18,7 @@ connectED is an AI-powered professional networking platform connecting students,
 │   │   └── services/                # Business logic & AI matching
 │   ├── tests/                       # Automated pytest suite (53 tests)
 │   ├── scripts/                     # Seed data & Webhook management scripts
-│   ├── openapi.json                 # OpenAPI 3.1.0 contract
-│   ├── connected-openapi-v1-draft.yaml # OpenAPI YAML specification
-│   ├── FRONTEND_INTEGRATION_GUIDE.md# Frontend integration guide
+│   ├── openapi.json                 # OpenAPI 3.1.0 contract (authoritative)
 │   ├── requirements.txt             # Python dependencies
 │   ├── .env.example                 # Environment template
 │   └── README.md                    # Backend documentation & API contract
