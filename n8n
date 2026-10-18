@@ -1,0 +1,927 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "id": "4dcd0f32-b9e1-46c5-a926-97a04bdfb979",
+      "name": "Telegram Trigger (Bot Updates)",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        288
+      ],
+      "webhookId": "connected-telegram-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message ? 'message' : ($json.callback_query ? 'callback_query' : 'other') }}",
+                    "rightValue": "message",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query ? 'callback_query' : 'other' }}",
+                    "rightValue": "callback_query",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Callback Query"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eba6b644-6dcd-4de7-ade4-feb472545019",
+      "name": "Switch: Message vs Callback",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text.split(' ')[0] }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Start Command"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text.split(' ')[0] }}",
+                    "rightValue": "/status",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Status Command"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text.split(' ')[0] }}",
+                    "rightValue": "/unlink",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Unlink Command"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text.split(' ')[0] }}",
+                    "rightValue": "/help",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Help Command"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a6c744b6-57f1-442d-92c3-a22c0c1b7298",
+      "name": "Switch: Command Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        176,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.message.text.split(' ').length }}",
+              "rightValue": 1,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "39ecf21e-7ee4-46c5-9377-58147f4c2d65",
+      "name": "IF Deep Link Token Present",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        432,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_API_BASE_URL || 'http://localhost:8000/api/v1' }}/telegram/link/validate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"token\": \"{{ $json.message.text.split(' ')[1] }}\",\n  \"telegram_user_id\": {{ $json.message.from.id }},\n  \"telegram_chat_id\": {{ $json.message.chat.id }},\n  \"telegram_username\": \"{{ $json.message.from.username || '' }}\"\n}",
+        "options": {}
+      },
+      "id": "b69a967f-0899-468e-8d34-b58b6442fc12",
+      "name": "HTTP: Validate Token with Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger (Bot Updates)').item.json.message.chat.id }}",
+        "text": "=🎉 <b>Account Linked Successfully!</b>\n\nWelcome <b>{{ $json.full_name }}</b> ({{ $json.role }})!\nYour Telegram account is now connected to <b>connectED</b>.\n\n🔔 You will receive real-time notifications for:\n• Mentorship requests & status updates\n• Meeting proposals & confirmations\n• 48-Hour SLA deadline alerts & fallback matches\n\nType /help to see all available commands.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "d9ba0260-6f69-440d-86d0-f8d638ab1c93",
+      "name": "Telegram: Send Link Success",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        -80
+      ],
+      "webhookId": "c40efa22-bb7e-4e5d-ab52-5f5e3f227954",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger (Bot Updates)').item.json.message.chat.id }}",
+        "text": "👋 Welcome to <b>connectED Bot</b>!\n\nconnectED connects ambitious students with experienced alumni mentors.\n\n🔗 <b>How to Link Your Account:</b>\n1. Log in to your <a href=\"https://connected.iiit.ac.in\">connectED Web Dashboard</a>\n2. Navigate to <b>Settings &gt; Integrations &gt; Telegram</b>\n3. Click <b>\"Connect Telegram\"</b> or type:\n   <code>/link &lt;your_single_use_token&gt;</code>\n\nℹ️ Tokens expire in 15 minutes and can only be used once.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "e6659ab2-b9c5-474e-ae77-c918eacac9da",
+      "name": "Telegram: Send Plain Start Welcome",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        128
+      ],
+      "webhookId": "5d2675fa-6876-4dc9-9d21-ed915a9aa5c3",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.message.chat.id }}",
+        "text": "🤖 <b>connectED Telegram Bot Guide</b>\n\n<b>Supported Commands:</b>\n• /start - Launch bot or link via deep link\n• /link &lt;token&gt; - Manually link with single-use token\n• /status - Check account connection details\n• /unlink - Disconnect your Telegram account\n• /optout - Pause all Telegram notifications\n• /help - View this guide\n\n<b>Mentorship SLA Features:</b>\n• Real-time Accept / Decline inline buttons\n• 48-Hour response deadline alerts\n• Automated fallback mentor matching\n• Meeting scheduling & mutual confirmation",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "cd3a9591-3b0b-448c-9df3-c06bd4ff5aa0",
+      "name": "Telegram: Send Help Menu",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        256
+      ],
+      "webhookId": "f5c0e0a7-3586-47e4-bda6-d3f5a754c3e7",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data.split(':')[0] }}",
+                    "rightValue": "mentor_act",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Mentorship Decision"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.callback_query.data.split(':')[0] }}",
+                    "rightValue": "meet_act",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Meeting Decision"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b1ca27e5-1348-4c84-a647-4b645dc2cb53",
+      "name": "Switch: Callback Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        176,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.callback_query.message.chat.id }}",
+        "text": "=Processing your response...",
+        "additionalFields": {}
+      },
+      "id": "29056ad0-97a4-4972-ad16-90ec5d25c01e",
+      "name": "Telegram: Acknowledge Callback Toast",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        432
+      ],
+      "webhookId": "6662ad93-1b35-4c7c-9daf-3d9cb58a2a83",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.BACKEND_API_BASE_URL || 'http://localhost:8000/api/v1' }}/mentorship/requests/{{ $('Telegram Trigger (Bot Updates)').item.json.callback_query.data.split(':')[2] }}/respond",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.BACKEND_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"request_id\": \"{{ $('Telegram Trigger (Bot Updates)').item.json.callback_query.data.split(':')[2] }}\",\n  \"action\": \"{{ $('Telegram Trigger (Bot Updates)').item.json.callback_query.data.split(':')[1] }}\",\n  \"telegram_user_id\": {{ $('Telegram Trigger (Bot Updates)').item.json.callback_query.from.id }}\n}",
+        "options": {}
+      },
+      "id": "b69c64cc-65d2-46d7-959b-8469dc8ce630",
+      "name": "HTTP: Submit Mentor Decision to Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger (Bot Updates)').item.json.callback_query.message.chat.id }}",
+        "text": "=🎓 <b>Mentorship Request ({{ $json.status == 'ACCEPTED' ? 'ACCEPTED ✅' : 'DECLINED ❌' }})</b>\n\n<b>Status:</b> You {{ $json.status == 'ACCEPTED' ? 'accepted' : 'declined' }} this request on {{ $json.updated_at }}.\n\n{{ $json.status == 'ACCEPTED' ? '🤝 You can now propose a meeting time in connectED!' : '🙏 Thank you for your prompt response.' }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "3a466a51-0211-4b21-bc7e-288a725dc974",
+      "name": "Telegram: Edit Message (Disable Buttons)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        928,
+        432
+      ],
+      "webhookId": "7aa35f93-64d2-4ba0-a496-51e738bdfb34",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "events/mentorship/request.created",
+        "options": {}
+      },
+      "id": "c0c3e151-9fa5-4e19-abdf-21dc2697668a",
+      "name": "Webhook: Ingest Mentorship Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        784
+      ],
+      "webhookId": "connected-mentorship-request-created"
+    },
+    {
+      "parameters": {
+        "url": "=https://httpbin.org/get",
+        "options": {}
+      },
+      "id": "79d4694e-d79d-462a-a96c-506fdfb7027c",
+      "name": "HTTP: Resolve Mentor Telegram Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -80,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c_chat_exists",
+              "leftValue": "={{ $json.telegram_chat_id }}",
+              "operator": {
+                "type": "number",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "888082ea-15a6-4c0d-bc14-e3563946549c",
+      "name": "IF Mentor Linked to Telegram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        176,
+        784
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "=6160961793",
+        "text": "=🎓 <b>New Mentorship Request!</b>\n\n<b>Student:</b> {{ $('Webhook: Ingest Mentorship Request').first().json.mentee_name }}\n<b>Topic:</b> {{ $('Webhook: Ingest Mentorship Request').first().json.topic }}\n<b>Skills:</b> {{ $('Webhook: Ingest Mentorship Request').first().json.skills?.join(' • ') || 'Distributed Systems • FastAPI • Kubernetes' }}\n\n💬 <b>Message:</b>\n<i>\"{{ $('Webhook: Ingest Mentorship Request').first().json.message }}\"</i>\n\n⏳ <b>Response Deadline:</b> 48 Hours\n<i>Request ID:</i> <code>{{ $('Webhook: Ingest Mentorship Request').first().json.request_id }}</code>\n\nWould you like to mentor this student?",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "✅ Accept Mentorship",
+                    "additionalFields": {
+                      "callback_data": "=mentor_act:accept:{{ $('Webhook: Ingest Mentorship Request').item.json.body.request_id }}"
+                    }
+                  },
+                  {
+                    "text": "❌ Decline Request",
+                    "additionalFields": {
+                      "callback_data": "=mentor_act:decline:{{ $('Webhook: Ingest Mentorship Request').item.json.body.request_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "b17c0c76-0d01-4538-9783-450526efd0a4",
+      "name": "Telegram: Send Actionable Request Card",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        432,
+        736
+      ],
+      "webhookId": "156ee0fd-79ed-47c4-97b0-47ba28088eb5",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 48
+      },
+      "id": "8ea5f2a2-9286-40da-a5d3-f055308855fa",
+      "name": "Wait: 48 Hours SLA Window",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        736
+      ],
+      "webhookId": "connected-wait-48h"
+    },
+    {
+      "parameters": {
+        "url": "=https://httpbin.org/get",
+        "options": {}
+      },
+      "id": "f72fa60c-f666-448c-a4ee-5b16b9657214",
+      "name": "HTTP: Check Status After 48h",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "c_pending",
+              "leftValue": "=PENDING",
+              "rightValue": "PENDING",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "813f0c85-52fb-4995-b6e9-ab6b4e58ffc0",
+      "name": "IF Still PENDING after 48h",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        736
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://httpbin.org/post",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc84ee78-c830-465f-987b-92457070d89e",
+      "name": "HTTP: Trigger Fallback Engine in Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1424,
+        688
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "=6160961793",
+        "text": "=✨ <b>Fallback Mentor Recommended!</b>\n\nGood news! Your previous request reached the 48-hour response limit without a reply.\nOur AI engine has automatically matched and routed your request to:\n\n👤 <b>{{ $json.new_mentor_name }}</b> ({{ $json.new_mentor_company }})\n<b>Matched Skills:</b> {{ $json.skills_matched.join(', ') }}\n\nA fresh 48-hour request has been sent. We will keep you updated!",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "1bc4cb7a-5840-4a56-95a6-5fe3d5e24f96",
+      "name": "Telegram: Notify Student of Fallback Match",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1680,
+        688
+      ],
+      "webhookId": "fb6b01d1-e054-4a2f-8422-31334788c78a",
+      "credentials": {
+        "telegramApi": {
+          "id": "KtfcgK66qUHu1MZo",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger (Bot Updates)": {
+      "main": [
+        [
+          {
+            "node": "Switch: Message vs Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Message vs Callback": {
+      "main": [
+        [
+          {
+            "node": "Switch: Command Router",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch: Callback Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Command Router": {
+      "main": [
+        [
+          {
+            "node": "IF Deep Link Token Present",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "Telegram: Send Help Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Deep Link Token Present": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Validate Token with Backend",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Send Plain Start Welcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Validate Token with Backend": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Link Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Callback Type": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Acknowledge Callback Toast",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Acknowledge Callback Toast": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Submit Mentor Decision to Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Submit Mentor Decision to Backend": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Edit Message (Disable Buttons)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Ingest Mentorship Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Resolve Mentor Telegram Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Resolve Mentor Telegram Chat": {
+      "main": [
+        [
+          {
+            "node": "IF Mentor Linked to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Mentor Linked to Telegram": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Send Actionable Request Card",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram: Send Actionable Request Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram: Send Actionable Request Card": {
+      "main": [
+        [
+          {
+            "node": "Wait: 48 Hours SLA Window",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: 48 Hours SLA Window": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Check Status After 48h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Check Status After 48h": {
+      "main": [
+        [
+          {
+            "node": "IF Still PENDING after 48h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Still PENDING after 48h": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Trigger Fallback Engine in Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Trigger Fallback Engine in Backend": {
+      "main": [
+        [
+          {
+            "node": "Telegram: Notify Student of Fallback Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {
+    "Webhook: Ingest Mentorship Request": [
+      {
+        "event_id": "evt_test_2026",
+        "event_type": "mentorship.request.created",
+        "request_id": "req_101",
+        "mentor_id": "alumni_001",
+        "mentee_id": "student_101",
+        "mentee_name": "Divyansh Garg (3rd Year CSE)",
+        "topic": "System Design & Distributed Systems",
+        "message": "Hi! I am preparing for software engineering interviews and would love 30 minutes of guidance on scalable architecture.",
+        "skills": [
+          "Distributed Systems",
+          "FastAPI",
+          "Kubernetes"
+        ],
+        "created_at": "2026-10-18T10:00:00Z",
+        "expires_at": "2026-10-20T10:00:00Z"
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "52d098d17687ff50c1cbdf6efea9bd2b6098219fe939b32108b7a3df16a6a02b"
+  }
+}
