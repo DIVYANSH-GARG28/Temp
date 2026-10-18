@@ -15,6 +15,18 @@ An alumni and student networking platform for mentorship, career guidance, resea
 
 ---
 
+## Contents
+
+- [About](#about)
+- [What you can do](#what-you-can-do)
+- [Technology](#technology)
+- [Project structure](#project-structure)
+- [Run locally](#run-locally)
+- [Tests and production build](#tests-and-production-build)
+- [API overview](#api-overview)
+- [Configuration and security](#configuration-and-security)
+- [Contributing](#contributing)
+
 ## About
 
 Finding the right mentor or professional connection can be difficult when alumni information lives in a static directory. **connectED** helps students discover relevant alumni and faculty, request mentorship, and explore opportunities through a connected professional network.
