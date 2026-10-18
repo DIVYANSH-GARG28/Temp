@@ -88,3 +88,47 @@ def test_matched_skills_reflect_shared_skills():
         if "python" in alumni_skills:
             assert "python" in row["matched_skills"].lower()
 
+
+def test_matching_returns_empty_for_zero_or_negative_top_n():
+    results_zero = recommend_mentors(
+        student_skills="Python",
+        target_career="Data Scientist",
+        student_department="Computer Science",
+        top_n=0
+    )
+    assert len(results_zero) == 0
+    assert "match_score" in results_zero.columns
+
+    results_neg = recommend_mentors(
+        student_skills="Python",
+        target_career="Data Scientist",
+        student_department="Computer Science",
+        top_n=-3
+    )
+    assert len(results_neg) == 0
+
+
+def test_department_matching_case_and_whitespace_insensitive():
+    results = recommend_mentors(
+        student_skills="Python",
+        target_career="Software Engineer",
+        student_department="  computer science  ",
+        top_n=5
+    )
+    # Alumni with Computer Science department should receive D=1.0
+    for _, row in results.iterrows():
+        if row["department"].strip().lower() == "computer science":
+            assert row["D"] == 1.0
+
+
+def test_empty_skills_handled_gracefully():
+    results = recommend_mentors(
+        student_skills="",
+        target_career="Software Engineer",
+        student_department="Computer Science",
+        top_n=2
+    )
+    assert len(results) == 2
+    assert results["matched_skills"].iloc[0] == ""
+
+

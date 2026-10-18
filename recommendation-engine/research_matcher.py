@@ -1,5 +1,17 @@
 
-# Synthetic demo data only — these are NOT real faculty profiles.
+"""
+Research Faculty Matcher Prototype
+
+Matches student research interests against faculty research areas using
+keyword overlap and a hardcoded synonym map.
+
+CRITICAL LIMITATIONS & SYNTHETIC DATA NOTICE:
+- All 50 faculty profiles, universities, and research topics are COMPLETELY FICTIONAL.
+- This is a prototype demonstration engine, NOT a production semantic ML matcher.
+- Matching is keyword-overlap based with a synonym dictionary, not deep semantic embeddings.
+- Match scores represent matched keyword proportions (0.0 to 1.0), not model confidence.
+- Ties are broken deterministically by faculty name in alphabetical order.
+"""
 
 RESEARCH_AREAS = [
     ["Artificial Intelligence", "Machine Learning", "Deep Learning"],
@@ -83,6 +95,18 @@ FACULTY = [
 
 
 def recommend_research_faculty(research_interests, top_n=5):
+    """
+    Recommend synthetic faculty profiles based on keyword overlap with research interests.
+
+    Parameters:
+        research_interests (str | list[str] | tuple[str]): Comma-separated string or sequence
+            of research interest topics.
+        top_n (int): Maximum number of recommendations to return (default: 5).
+
+    Returns:
+        list[dict]: List of matching synthetic faculty dictionaries, ranked by descending
+            match_score, with ties broken by faculty_name ascending.
+    """
     if isinstance(research_interests, str):
         research_interests = [
             topic.strip()

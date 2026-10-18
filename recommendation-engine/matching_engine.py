@@ -1,4 +1,21 @@
 
+"""
+Mentor Matching Engine (KCD-v1)
+
+Implements weighted recommendation scoring:
+    Score = 0.50 * K + 0.30 * C + 0.20 * D
+
+Where:
+    K: Cosine similarity between student skills and alumni skills (sentence-transformers/all-MiniLM-L6-v2)
+    C: Semantic alignment between student target career and inferred alumni job title
+    D: Exact academic department match (1.0 if match, 0.0 otherwise)
+
+CRITICAL DATA LIMITATION:
+Alumni job titles in `data/alumni_with_job_titles.csv` are inferred heuristically from
+alumni skills, NOT verified employment records. Scores represent ranking metrics rather
+than empirical probabilities of mentorship success.
+"""
+
 from sklearn.metrics.pairwise import cosine_similarity
 
 from profile_processor import load_alumni_data
@@ -15,8 +32,22 @@ def recommend_mentors(
     student_department,
     top_n=5
 ):
+    """
+    Recommend top_n alumni mentors based on KCD-v1 scoring.
+
+    Parameters:
+        student_skills (str): Comma-separated skills of the student.
+        target_career (str): Target career goal of the student.
+        student_department (str): Student's academic department.
+        top_n (int): Maximum number of mentor recommendations to return.
+
+    Returns:
+        pd.DataFrame: Ranked mentors sorted deterministically by match_score desc,
+                      then alumni name asc.
+    """
     df = load_alumni_data("data/alumni_with_job_titles.csv")
     model = get_model()
+
 
     # K: skill similarity
     student_embedding = model.encode(
