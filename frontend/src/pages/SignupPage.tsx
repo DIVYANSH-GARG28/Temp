@@ -14,7 +14,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../services/api";
 
-type SignupRole = "" | "student" | "alumni";
+type SignupRole = "" | "student" | "alumni" | "faculty" | "recruiter" | "founder";
 type SignupField = "role" | "email" | "name" | "password" | "confirmPassword";
 type SignupErrors = Partial<Record<SignupField, string>>;
 
@@ -38,12 +38,16 @@ export function SignupPage() {
     if (submitting) return;
 
     const nextErrors: SignupErrors = {};
-    if (!role) nextErrors.role = "Choose whether you’re joining as a student or alum.";
+    if (!role) nextErrors.role = "Choose your role in connectED.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       nextErrors.email = "Enter a valid email address.";
     }
     if (!name.trim()) nextErrors.name = "Enter your full name.";
-    if (!password) nextErrors.password = "Enter a password.";
+    if (!password) {
+      nextErrors.password = "Enter a password.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
     if (!confirmPassword) {
       nextErrors.confirmPassword = "Confirm your password.";
     } else if (password !== confirmPassword) {
@@ -128,7 +132,10 @@ export function SignupPage() {
             >
               <option value="">Select your role</option>
               <option value="student">Student</option>
-              <option value="alumni">Alumni</option>
+              <option value="alumni">Alumni Mentor</option>
+              <option value="faculty">Faculty Member</option>
+              <option value="recruiter">Technical Recruiter</option>
+              <option value="founder">Startup Founder</option>
             </select>
             {errors.role && (
               <span className="auth-field-error" id="signup-role-error">

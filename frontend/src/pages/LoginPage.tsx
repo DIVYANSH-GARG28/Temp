@@ -1,10 +1,24 @@
 import { useRef, useState, type FormEvent } from "react";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Eye, EyeOff, GraduationCap, LockKeyhole, Mail, Sparkles, UserRound } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ApiError, api } from "../services/api";
 
 type LoginField = "email" | "password";
 type LoginErrors = Partial<Record<LoginField, string>>;
+
+interface DemoAccount {
+  name: string;
+  role: string;
+  email: string;
+  password: string;
+}
+
+const DEMO_ACCOUNTS: DemoAccount[] = [
+  { name: "Aisha Khan", role: "Student", email: "aisha.student@university.edu", password: "Demo1234!" },
+  { name: "Alex Johnson", role: "Alumni Mentor", email: "alex.mentor@example.com", password: "Demo1234!" },
+  { name: "Dr. Wei Chen", role: "Faculty", email: "dr.chen@university.edu", password: "Demo1234!" },
+  { name: "Sarah Mitchell", role: "Recruiter", email: "recruiter@techcorp.com", password: "Demo1234!" },
+];
 
 export function LoginPage() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -32,6 +46,29 @@ export function LoginPage() {
   const [loginNotice, setLoginNotice] = useState(routeNotice);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  async function handleQuickLogin(account: DemoAccount) {
+    setEmail(account.email);
+    setPassword(account.password);
+    setLoginNotice("");
+    setErrors({});
+    setSubmitting(true);
+    try {
+      await api.login(account.email, account.password);
+      setPassword("");
+      navigate(redirectTo, { replace: true });
+    } catch (cause) {
+      setLoginNotice(
+        cause instanceof ApiError
+          ? cause.status === 401
+            ? "Demo credentials rejected. Please ensure the database has been seeded."
+            : cause.message
+          : "We couldn't complete sign-in. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -177,6 +214,36 @@ export function LoginPage() {
             </p>
           )}
         </form>
+
+        <div className="demo-accounts-section" style={{ marginTop: "1.25rem", borderTop: "1px solid rgba(0, 0, 0, 0.08)", paddingTop: "1rem" }}>
+          <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-muted, #64748b)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.6rem", display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <Sparkles size={13} color="#2563eb" /> Quick Demo Sign-In
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+            {DEMO_ACCOUNTS.map((account) => (
+              <button
+                key={account.email}
+                type="button"
+                className="button button-secondary"
+                style={{
+                  padding: "0.45rem 0.65rem",
+                  fontSize: "0.75rem",
+                  textAlign: "left",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  borderRadius: "8px",
+                  lineHeight: "1.2",
+                }}
+                onClick={() => handleQuickLogin(account)}
+                disabled={submitting}
+              >
+                <span style={{ fontWeight: 600, color: "#0f172a" }}>{account.name}</span>
+                <span style={{ fontSize: "0.68rem", color: "#64748b" }}>{account.role}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
         <p className="auth-mode-link">
           Don&apos;t have an account? <Link to="/signup">Sign up</Link>

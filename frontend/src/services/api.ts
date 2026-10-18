@@ -37,17 +37,38 @@ if (authMode !== "bearer" && authMode !== "cookie") {
 
 const TOKEN_STORAGE_KEY = "connected.access-token";
 const TOKEN_EXPIRY_KEY = "connected.access-token-expiry";
+const USER_STORAGE_KEY = "connected.cached-user";
 export const SESSION_EXPIRED_EVENT = "connected:session-expired";
+
+function getStorages(): Storage[] {
+  const list: Storage[] = [];
+  if (typeof window === "undefined") return list;
+  try {
+    list.push(window.localStorage);
+  } catch {}
+  try {
+    list.push(window.sessionStorage);
+  } catch {}
+  return list;
+}
 
 function readStoredAccessToken(): string | null {
   if (typeof window === "undefined") return null;
-  const expiresAt = Number(sessionStorage.getItem(TOKEN_EXPIRY_KEY));
-  if (!expiresAt || expiresAt <= Date.now()) {
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-    sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
-    return null;
+  for (const storage of getStorages()) {
+    try {
+      const expiresAt = Number(storage.getItem(TOKEN_EXPIRY_KEY));
+      const token = storage.getItem(TOKEN_STORAGE_KEY);
+      if (token && expiresAt && expiresAt > Date.now()) {
+        return token;
+      }
+      if (expiresAt && expiresAt <= Date.now()) {
+        storage.removeItem(TOKEN_STORAGE_KEY);
+        storage.removeItem(TOKEN_EXPIRY_KEY);
+        storage.removeItem(USER_STORAGE_KEY);
+      }
+    } catch {}
   }
-  return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+  return null;
 }
 
 let accessToken: string | null = readStoredAccessToken();
@@ -71,19 +92,48 @@ export class ApiError extends Error {
   }
 }
 
-export function setAccessToken(token: string | null, expiresIn?: number): void {
+export function setAccessToken(
+  token: string | null,
+  expiresIn?: number,
+  user?: CurrentUser,
+): void {
   accessToken = token;
   if (typeof window === "undefined") return;
+  const storages = getStorages();
   if (!token || !expiresIn || !Number.isFinite(expiresIn) || expiresIn <= 0) {
-    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-    sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+    for (const storage of storages) {
+      try {
+        storage.removeItem(TOKEN_STORAGE_KEY);
+        storage.removeItem(TOKEN_EXPIRY_KEY);
+        storage.removeItem(USER_STORAGE_KEY);
+      } catch {}
+    }
     return;
   }
-  sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
-  sessionStorage.setItem(
-    TOKEN_EXPIRY_KEY,
-    String(Date.now() + expiresIn * 1000),
-  );
+  const expiryValue = String(Date.now() + expiresIn * 1000);
+  for (const storage of storages) {
+    try {
+      storage.setItem(TOKEN_STORAGE_KEY, token);
+      storage.setItem(TOKEN_EXPIRY_KEY, expiryValue);
+      if (user) {
+        storage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+      }
+    } catch {}
+  }
+}
+
+export function getCachedUser(): CurrentUser | null {
+  if (typeof window === "undefined") return null;
+  for (const storage of getStorages()) {
+    try {
+      const raw = storage.getItem(USER_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (isCurrentUser(parsed)) return parsed;
+      }
+    } catch {}
+  }
+  return null;
 }
 
 export function hasAccessToken(): boolean {
@@ -395,8 +445,8 @@ async function request<T>(
   } catch (error) {
     throw new ApiError(
       error instanceof Error
-        ? `Could not reach the API: ${error.message}`
-        : "Could not reach the API.",
+        ? `Could not reach the connectED API at ${apiBase}: ${error.message}. Please verify the FastAPI backend server is running on port 8000.`
+        : `Could not reach the connectED API at ${apiBase}.`,
       0,
     );
   }
@@ -460,7 +510,7 @@ export const api = {
     ) {
       throw new ApiError("The registration API returned an unexpected response.", 201);
     }
-    setAccessToken(data.access_token, data.expires_in);
+    setAccessToken(data.access_token, data.expires_in, data.user);
     return data.user;
   },
 
@@ -499,7 +549,7 @@ export const api = {
     ) {
       throw new ApiError("The login API returned an unexpected response.", 200);
     }
-    setAccessToken(data.access_token, data.expires_in);
+    setAccessToken(data.access_token, data.expires_in, data.user);
     return data.user;
   },
 
@@ -507,6 +557,11 @@ export const api = {
     const data = await request<unknown>("/auth/me");
     if (!isCurrentUser(data)) {
       throw new ApiError("The current-user API returned an unexpected response.", 200);
+    }
+    for (const storage of getStorages()) {
+      try {
+        storage.setItem(USER_STORAGE_KEY, JSON.stringify(data));
+      } catch {}
     }
     return data;
   },

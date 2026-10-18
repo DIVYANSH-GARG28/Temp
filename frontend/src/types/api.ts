@@ -26,8 +26,10 @@ export interface TokenResponse {
 export interface RegisterInput {
   email: string;
   password: string;
-  role: "student" | "alumni";
+  role: "student" | "alumni" | "faculty" | "recruiter" | "founder" | "admin";
   name: string;
+  headline?: string;
+  institution?: string;
 }
 
 export interface ProfileMe {
